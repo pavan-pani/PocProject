@@ -1,0 +1,23 @@
+{
+    "compilerOptions": {
+      "module": "CommonJS",
+      "target": "ES2017",
+      "noImplicitAny": true,
+      "preserveConstEnums": true,
+      "outDir": "./built",
+      "sourceMap": true
+    },
+    "devDependencies": {
+      "@types/aws-lambda": "^8.10.51",
+      "@types/jest": "^27.4.1",
+      "@types/mocha": "^9.1.0",
+      "@types/node": "^13.13.52",
+      "aws-sdk": "^2.655.0",
+      "chai": "^4.3.6",
+      "mocha": "^9.2.2",
+      "nyc": "^15.1.0",
+      "typescript": "^3.8.3"
+      },
+    "include": ["src/**/*", "tsconfig.json"],
+    "exclude": ["node_modules", "**/*.spec.ts"]
+}

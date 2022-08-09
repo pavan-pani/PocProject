@@ -1,0 +1,93 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  sam-app
+
+  Sample SAM Template for sam-app
+  
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 3
+    Runtime: nodejs14.x
+    Environment:
+      Variables:
+        TABLE_NAME: !Ref DynamoDbTable
+        QUEUE_URL: !Ref MySqsQueue
+
+
+Resources:
+  PostmanToSQS:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: built
+      Handler: api2sqs.handler
+      Policies: AmazonSQSFullAccess
+      Events:
+        dataFromPostman:
+          Type: Api
+          Properties: 
+            Path: /postData
+            Method: post
+
+  DynamoDbTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      TableName: DynamoDBTablePoc
+      PrimaryKey:
+        Name: StudentId
+        Type: Number 
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+  
+  
+  SQStoDynamoDB:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: built
+      Handler: sqs2dynamo.handler
+      Policies:
+        - AmazonSQSFullAccess
+        - AmazonDynamoDBFullAccess
+      Events:
+        MySQSEvent:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt MySqsQueue.Arn
+            BatchSize: 10
+            
+  MySqsQueue:
+    Type: AWS::SQS::Queue
+      
+
+
+  DynamoDBtoPostman:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: built
+      Handler: dynamo2postman.handler
+      Policies: AmazonDynamoDBFullAccess
+      Events:
+        DataFromDynamoDB:
+          Type: Api
+          Properties: 
+            Path: /getData
+            Method: get
+      
+
+
+#Outputs:
+  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
+  # Find out more about other implicit resources you can reference within SAM
+  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
+  
+  #HelloWorldApi:
+    #Description: "API Gateway endpoint URL for Prod stage for Hello World function"
+    #Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
+  #HelloWorldFunction:
+    #Description: "Hello World Lambda Function ARN"
+    #Value: !GetAtt HelloWorldFunction.Arn
+  #HelloWorldFunctionIamRole:
+    #Description: "Implicit IAM Role created for Hello World function"
+    #Value: !GetAtt HelloWorldFunctionRole.Arn
